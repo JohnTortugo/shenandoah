@@ -89,6 +89,10 @@ void ShenandoahGenerationalFullGC::handle_completion(ShenandoahHeap* heap) {
 
 void ShenandoahGenerationalFullGC::rebuild_remembered_set(ShenandoahHeap* heap) {
   ShenandoahGCPhase phase(ShenandoahPhaseTimings::full_gc_reconstruct_remembered_set);
+
+  ShenandoahScanRemembered* scanner = heap->old_generation()->card_scan();
+  scanner->reset_remset();
+
   ShenandoahRegionIterator regions;
   ShenandoahReconstructRememberedSetTask task(&regions);
   heap->workers()->run_task(&task);

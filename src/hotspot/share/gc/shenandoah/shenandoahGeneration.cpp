@@ -105,20 +105,6 @@ public:
   }
 };
 
-class ShenandoahCopyWriteCardTableToRead: public ShenandoahHeapRegionClosure {
-private:
-  ShenandoahScanRemembered* _scanner;
-public:
-  ShenandoahCopyWriteCardTableToRead(ShenandoahScanRemembered* scanner) : _scanner(scanner) {}
-
-  void heap_region_do(ShenandoahHeapRegion* region) override {
-    assert(region->is_old(), "Don't waste time doing this for non-old regions");
-    _scanner->reset_remset(region->bottom(), ShenandoahHeapRegion::region_size_words());
-  }
-
-  bool is_thread_safe() override { return true; }
-};
-
 void ShenandoahGeneration::confirm_heuristics_mode() {
   if (_heuristics->is_diagnostic() && !UnlockDiagnosticVMOptions) {
     vm_exit_during_initialization(
@@ -199,10 +185,6 @@ void ShenandoahGeneration::reset_mark_bitmap() {
   heap->workers()->run_task(&task);
 }
 
-// The ideal is to swap the remembered set so the safepoint effort is no more than a few pointer manipulations.
-// However, limitations in the implementation of the mutator write-barrier make it difficult to simply change the
-// location of the card table.  So the interim implementation of swap_remembered_set will copy the write-table
-// onto the read-table and will then clear the write-table.
 void ShenandoahGeneration::swap_remembered_set() {
   // Must be sure that marking is complete before we swap remembered set.
   ShenandoahGenerationalHeap* heap = ShenandoahGenerationalHeap::heap();
@@ -210,8 +192,7 @@ void ShenandoahGeneration::swap_remembered_set() {
   shenandoah_assert_safepoint();
 
   ShenandoahOldGeneration* old_generation = heap->old_generation();
-  ShenandoahCopyWriteCardTableToRead task(old_generation->card_scan());
-  old_generation->parallel_heap_region_iterate(&task);
+  old_generation->card_scan()->reset_remset();
 }
 
 // Copy the write-version of the card-table into the read-version, clearing the
@@ -229,7 +210,6 @@ void ShenandoahGeneration::merge_write_table() {
 }
 
 void ShenandoahGeneration::prepare_gc() {
-
   reset_mark_bitmap();
 
   // Capture Top At Mark Start for this generation (typically young) and reset mark bitmap.

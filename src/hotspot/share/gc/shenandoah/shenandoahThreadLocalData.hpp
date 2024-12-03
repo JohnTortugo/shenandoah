@@ -49,6 +49,8 @@ private:
 
   SATBMarkQueue           _satb_mark_queue;
 
+  CardTable::CardValue*   _byte_map_base;
+
   // Thread-local allocation buffer for object evacuations.
   // In generational mode, it is exclusive to the young generation.
   PLAB* _gclab;
@@ -106,6 +108,12 @@ public:
     return data(thread)->_satb_mark_queue;
   }
 
+  static CardTable::CardValue* byte_map_base(Thread* thread) {
+    CardTable::CardValue* cv = data(thread)->_byte_map_base;
+    assert(cv != nullptr, "returning thread local byte_map_base which is nullptr.");
+    return cv;
+  }
+
   static void set_gc_state(Thread* thread, char gc_state) {
     data(thread)->_gc_state = gc_state;
   }
@@ -113,6 +121,11 @@ public:
   static char gc_state(Thread* thread) {
     assert(thread->is_Java_thread(), "GC state is only synchronized to java threads");
     return data(thread)->_gc_state;
+  }
+
+  static void set_map_base(Thread* thread, CardTable::CardValue* cv) {
+    assert(cv != nullptr, "trying to set thread local byte_map_base to nullptr.");
+    data(thread)->_byte_map_base = cv;
   }
 
   static void initialize_gclab(Thread* thread) {
@@ -273,6 +286,10 @@ public:
 
   static ByteSize gc_state_offset() {
     return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _gc_state);
+  }
+
+  static ByteSize byte_map_base_offset() {
+    return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _byte_map_base);
   }
 };
 

@@ -243,8 +243,7 @@ public:
   // the write table unchanged.
   void merge_write_table(HeapWord* start, size_t word_count);
 
-  // Destructively copy the write table to the read table, and clean the write table.
-  void reset_remset(HeapWord* start, size_t word_count);
+  void reset_remset();
 };
 
 // A ShenandoahCardCluster represents the minimal unit of work
@@ -758,7 +757,7 @@ public:
   void mark_card_as_clean(HeapWord* p);
   void mark_range_as_clean(HeapWord* p, size_t num_heap_words);
 
-  void reset_remset(HeapWord* start, size_t word_count) { _rs->reset_remset(start, word_count); }
+  void reset_remset() { _rs->reset_remset(); }
 
   void merge_write_table(HeapWord* start, size_t word_count) { _rs->merge_write_table(start, word_count); }
 

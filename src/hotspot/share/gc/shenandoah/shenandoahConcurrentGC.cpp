@@ -626,7 +626,6 @@ void ShenandoahConcurrentGC::op_init_mark() {
 
   if (heap->mode()->is_generational()) {
     if (_generation->is_young()) {
-      // The current implementation of swap_remembered_set() copies the write-card-table to the read-card-table.
       ShenandoahGCPhase phase(ShenandoahPhaseTimings::init_swap_rset);
       _generation->swap_remembered_set();
     }

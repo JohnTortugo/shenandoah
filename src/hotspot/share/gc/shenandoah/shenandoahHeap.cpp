@@ -225,7 +225,11 @@ jint ShenandoahHeap::initialize() {
                               "Cannot commit heap memory");
   }
 
-  BarrierSet::set_barrier_set(new ShenandoahBarrierSet(this, _heap_region));
+  ShenandoahBarrierSet* bs = new ShenandoahBarrierSet(this, _heap_region);
+  BarrierSet::set_barrier_set(bs);
+
+  // Now that ThreadLocalData are created we can set byte_map_base on it
+  ShenandoahThreadLocalData::set_map_base(Thread::current(), bs->card_table()->write_byte_map_base());
 
   // Now we know the number of regions and heap sizes, initialize the heuristics.
   initialize_heuristics();

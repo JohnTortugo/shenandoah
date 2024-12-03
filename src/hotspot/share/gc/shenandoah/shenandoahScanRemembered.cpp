@@ -31,6 +31,7 @@
 #include "gc/shenandoah/shenandoahReferenceProcessor.hpp"
 #include "gc/shenandoah/shenandoahScanRemembered.inline.hpp"
 #include "logging/log.hpp"
+#include "runtime/threads.hpp"
 
 size_t ShenandoahDirectCardMarkRememberedSet::last_valid_index() const {
   return _card_table->last_valid_index();
@@ -625,27 +626,20 @@ void ShenandoahDirectCardMarkRememberedSet::merge_write_table(HeapWord* start, s
 }
 
 // Destructively copy the write table to the read table, and clean the write table.
-void ShenandoahDirectCardMarkRememberedSet::reset_remset(HeapWord* start, size_t word_count) {
-  size_t start_index = card_index_for_addr(start);
-#ifdef ASSERT
-  // avoid querying card_index_for_addr() for an address past end of heap
-  size_t end_index = card_index_for_addr(start + word_count - 1) + 1;
-#endif
-  assert(start_index % ((size_t)1 << LogCardValsPerIntPtr) == 0, "Expected a multiple of CardValsPerIntPtr");
-  assert(end_index % ((size_t)1 << LogCardValsPerIntPtr) == 0, "Expected a multiple of CardValsPerIntPtr");
+void ShenandoahDirectCardMarkRememberedSet::reset_remset() {
+  // iterate on threads and adjust thread local data
+  struct ResetRemSet : public ThreadClosure {
+    CardTable::CardValue* new_ptr;
+    ResetRemSet(CardTable::CardValue* np) {
+      this->new_ptr = np;
+    }
+    virtual void do_thread(Thread* t) {
+      ShenandoahThreadLocalData::set_map_base(t, new_ptr);
+    }
+  } reset_remset (_card_table->swap_bases());
 
-  // We'll access in groups of intptr_t worth of card entries
-  intptr_t* const read_table  = (intptr_t*) &(_card_table->read_byte_map())[start_index];
-  intptr_t* const write_table = (intptr_t*) &(_card_table->write_byte_map())[start_index];
-
-  // Avoid division, use shift instead
-  assert(word_count % ((size_t)1 << (LogCardSizeInWords + LogCardValsPerIntPtr)) == 0, "Expected a multiple of CardSizeInWords*CardValsPerIntPtr");
-  size_t const num = word_count >> (LogCardSizeInWords + LogCardValsPerIntPtr);
-
-  for (size_t i = 0; i < num; i++) {
-    read_table[i]  = write_table[i];
-    write_table[i] = CardTable::clean_card_row_val();
-  }
+  log_info(gc, remset)("Resetting remset to: " PTR_FORMAT, p2i(reset_remset.new_ptr));
+  Threads::threads_do(&reset_remset);
 }
 
 ShenandoahScanRememberedTask::ShenandoahScanRememberedTask(ShenandoahObjToScanQueueSet* queue_set,
@@ -939,10 +933,7 @@ void ShenandoahReconstructRememberedSetTask::work(uint worker_id) {
         oop obj = cast_to_oop(obj_addr);
         size_t size = obj->size();
 
-        // First, clear the remembered set for all spanned humongous regions
         size_t num_regions = ShenandoahHeapRegion::required_regions(size * HeapWordSize);
-        size_t region_span = num_regions * ShenandoahHeapRegion::region_size_words();
-        scanner->reset_remset(r->bottom(), region_span);
         size_t region_index = r->index();
         ShenandoahHeapRegion* humongous_region = heap->get_region(region_index);
         while (num_regions-- != 0) {
@@ -955,8 +946,6 @@ void ShenandoahReconstructRememberedSetTask::work(uint worker_id) {
         scanner->register_object_without_lock(obj_addr);
         obj->oop_iterate(&dirty_cards_for_cross_generational_pointers);
       } else if (!r->is_humongous()) {
-        // First, clear the remembered set
-        scanner->reset_remset(r->bottom(), ShenandoahHeapRegion::region_size_words());
         scanner->reset_object_range(r->bottom(), r->end());
 
         // Then iterate over all objects, registering object and DIRTYing relevant remembered set cards
