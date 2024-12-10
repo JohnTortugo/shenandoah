@@ -88,6 +88,10 @@ public:
     return _read_byte_map;
   }
 
+  CardValue* read_byte_map_base() {
+    return _read_byte_map_base;
+  }
+
   CardValue* write_byte_map() {
     return _write_byte_map;
   }

@@ -71,18 +71,6 @@ void ShenandoahDirectCardMarkRememberedSet::mark_range_as_dirty(size_t card_inde
   }
 }
 
-void ShenandoahDirectCardMarkRememberedSet::mark_card_as_clean(size_t card_index) {
-  CardValue* bp = &(_card_table->write_byte_map())[card_index];
-  bp[0] = CardTable::clean_card_val();
-}
-
-void ShenandoahDirectCardMarkRememberedSet::mark_range_as_clean(size_t card_index, size_t num_cards) {
-  CardValue* bp = &(_card_table->write_byte_map())[card_index];
-  while (num_cards-- > 0) {
-    *bp++ = CardTable::clean_card_val();
-  }
-}
-
 bool ShenandoahDirectCardMarkRememberedSet::is_card_dirty(HeapWord* p) const {
   size_t index = card_index_for_addr(p);
   CardValue* bp = &(_card_table->read_byte_map())[index];
@@ -113,12 +101,6 @@ void ShenandoahDirectCardMarkRememberedSet::mark_range_as_dirty(HeapWord* p, siz
   }
 }
 
-void ShenandoahDirectCardMarkRememberedSet::mark_card_as_clean(HeapWord* p) {
-  size_t index = card_index_for_addr(p);
-  CardValue* bp = &(_card_table->write_byte_map())[index];
-  bp[0] = CardTable::clean_card_val();
-}
-
 void ShenandoahDirectCardMarkRememberedSet::mark_range_as_clean(HeapWord* p, size_t num_heap_words) {
   CardValue* bp = &(_card_table->write_byte_map_base())[uintptr_t(p) >> _card_shift];
   CardValue* end_bp = &(_card_table->write_byte_map_base())[uintptr_t(p + num_heap_words) >> _card_shift];
@@ -126,6 +108,17 @@ void ShenandoahDirectCardMarkRememberedSet::mark_range_as_clean(HeapWord* p, siz
   if (((unsigned long long) (p + num_heap_words)) & (CardTable::card_size() - 1)) {
     end_bp++;
   }
+  while (bp < end_bp) {
+    *bp++ = CardTable::clean_card_val();
+  }
+}
+
+void ShenandoahDirectCardMarkRememberedSet::mark_read_table_as_clean() {
+  CardValue* read_table = _card_table->read_byte_map_base();
+
+  CardValue* bp = &(read_table)[0];
+  CardValue* end_bp = &(read_table)[_card_table->last_valid_index() >> _card_shift];
+
   while (bp < end_bp) {
     *bp++ = CardTable::clean_card_val();
   }
@@ -330,12 +323,12 @@ void ShenandoahScanRemembered::mark_range_as_dirty(HeapWord* p, size_t num_heap_
   _rs->mark_range_as_dirty(p, num_heap_words);
 }
 
-void ShenandoahScanRemembered::mark_card_as_clean(HeapWord* p) {
-  _rs->mark_card_as_clean(p);
+void ShenandoahScanRemembered::mark_range_as_clean(HeapWord* p, size_t num_heap_words) {
+  _rs->mark_range_as_clean(p, num_heap_words);
 }
 
-void ShenandoahScanRemembered:: mark_range_as_clean(HeapWord* p, size_t num_heap_words) {
-  _rs->mark_range_as_clean(p, num_heap_words);
+void ShenandoahScanRemembered::mark_read_table_as_clean() {
+  _rs->mark_read_table_as_clean();
 }
 
 void ShenandoahScanRemembered::reset_object_range(HeapWord* from, HeapWord* to) {
@@ -625,7 +618,6 @@ void ShenandoahDirectCardMarkRememberedSet::merge_write_table(HeapWord* start, s
   }
 }
 
-// Destructively copy the write table to the read table, and clean the write table.
 void ShenandoahDirectCardMarkRememberedSet::reset_remset() {
   // iterate on threads and adjust thread local data
   struct ResetRemSet : public ThreadClosure {

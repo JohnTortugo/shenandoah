@@ -373,6 +373,11 @@ void ShenandoahOldGeneration::prepare_gc() {
   assert(state() != FILLING, "Cannot reset old without making it parsable");
 
   ShenandoahGeneration::prepare_gc();
+
+  log_trace(gc, barrier)("ShenandoahOldGeneration::prepare_gc:");
+  log_trace(gc, barrier)("    cleaning read card table... ");
+  card_scan()->mark_read_table_as_clean();
+  log_trace(gc, barrier)("    done. ");
 }
 
 bool ShenandoahOldGeneration::entry_coalesce_and_fill() {

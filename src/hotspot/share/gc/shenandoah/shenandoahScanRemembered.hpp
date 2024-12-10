@@ -236,8 +236,8 @@ public:
   inline bool is_write_card_dirty(HeapWord* p) const;
   inline void mark_card_as_dirty(HeapWord* p);
   inline void mark_range_as_dirty(HeapWord* p, size_t num_heap_words);
-  inline void mark_card_as_clean(HeapWord* p);
   inline void mark_range_as_clean(HeapWord* p, size_t num_heap_words);
+  inline void mark_read_table_as_clean();
 
   // Merge any dirty values from write table into the read table, while leaving
   // the write table unchanged.
@@ -754,8 +754,8 @@ public:
   bool is_write_card_dirty(HeapWord* p);
   void mark_card_as_dirty(HeapWord* p);
   void mark_range_as_dirty(HeapWord* p, size_t num_heap_words);
-  void mark_card_as_clean(HeapWord* p);
   void mark_range_as_clean(HeapWord* p, size_t num_heap_words);
+  void mark_read_table_as_clean();
 
   void reset_remset() { _rs->reset_remset(); }
 
