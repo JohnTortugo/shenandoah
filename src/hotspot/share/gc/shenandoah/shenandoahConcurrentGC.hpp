@@ -78,7 +78,7 @@ private:
   void vmop_entry_final_updaterefs();
 
   // Entry methods to normally STW GC operations. These set up logging, monitoring
-  // and workers for net VM operation
+  // and workers for next VM operation
   void entry_init_mark();
   void entry_final_mark();
   void entry_init_updaterefs();

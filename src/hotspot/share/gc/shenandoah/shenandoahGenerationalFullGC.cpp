@@ -90,8 +90,10 @@ void ShenandoahGenerationalFullGC::handle_completion(ShenandoahHeap* heap) {
 void ShenandoahGenerationalFullGC::rebuild_remembered_set(ShenandoahHeap* heap) {
   ShenandoahGCPhase phase(ShenandoahPhaseTimings::full_gc_reconstruct_remembered_set);
 
+  /* TODO: Is there a risk that we have swapped already and are clearing what we shouldn't? */
   ShenandoahScanRemembered* scanner = heap->old_generation()->card_scan();
-  scanner->reset_remset();
+  scanner->mark_read_table_as_clean();
+  scanner->swap_remset();
 
   ShenandoahRegionIterator regions;
   ShenandoahReconstructRememberedSetTask task(&regions);

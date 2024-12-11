@@ -122,6 +122,8 @@ void ShenandoahDirectCardMarkRememberedSet::mark_read_table_as_clean() {
   while (bp < end_bp) {
     *bp++ = CardTable::clean_card_val();
   }
+
+  log_info(gc, remset)("Cleaned read_table from " PTR_FORMAT " to " PTR_FORMAT, p2i(&(read_table)[0]), p2i(end_bp));
 }
 
 // No lock required because arguments align with card boundaries.
@@ -616,21 +618,35 @@ void ShenandoahDirectCardMarkRememberedSet::merge_write_table(HeapWord* start, s
   for (size_t i = 0; i < num; i++) {
     read_table[i] &= write_table[i];
   }
+
+  log_info(gc, remset)("Finished merging write_table into read_table.");
 }
 
-void ShenandoahDirectCardMarkRememberedSet::reset_remset() {
-  // iterate on threads and adjust thread local data
-  struct ResetRemSet : public ThreadClosure {
+void ShenandoahDirectCardMarkRememberedSet::swap_remset() {
+  CardTable::CardValue* new_ptr = _card_table->swap_bases();
+
+#ifdef ASSERT
+  CardValue* bp = &(new_ptr)[0];
+  CardValue* end_bp = &(new_ptr)[_card_table->last_valid_index() >> _card_shift];
+
+  while (bp < end_bp) {
+    assert(*bp == CardTable::clean_card_val(), "Should be clean.");
+    bp++;
+  }
+#endif
+
+  // Iterate on threads and adjust thread local data
+  struct SwapRemSet : public ThreadClosure {
     CardTable::CardValue* new_ptr;
-    ResetRemSet(CardTable::CardValue* np) {
+    SwapRemSet(CardTable::CardValue* np) {
       this->new_ptr = np;
     }
     virtual void do_thread(Thread* t) {
       ShenandoahThreadLocalData::set_map_base(t, new_ptr);
     }
-  } reset_remset (_card_table->swap_bases());
+  } reset_remset(new_ptr);
 
-  log_info(gc, remset)("Resetting remset to: " PTR_FORMAT, p2i(reset_remset.new_ptr));
+  log_info(gc, remset)("Swapping RemSet to: " PTR_FORMAT, p2i(reset_remset.new_ptr));
   Threads::threads_do(&reset_remset);
 }
 

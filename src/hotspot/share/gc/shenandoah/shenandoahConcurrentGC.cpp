@@ -369,6 +369,10 @@ void ShenandoahConcurrentGC::entry_reset() {
 
     heap->old_generation()->prepare_gc();
   }
+
+  if (heap->mode()->is_generational()) {
+    heap->old_generation()->card_scan()->mark_read_table_as_clean();
+  }
 }
 
 void ShenandoahConcurrentGC::entry_scan_remembered_set() {
@@ -622,7 +626,6 @@ void ShenandoahConcurrentGC::op_init_mark() {
   assert(_generation->is_bitmap_clear(), "need clear marking bitmap");
   assert(!_generation->is_mark_complete(), "should not be complete");
   assert(!heap->has_forwarded_objects(), "No forwarded objects on this path");
-
 
   if (heap->mode()->is_generational()) {
     if (_generation->is_young()) {
