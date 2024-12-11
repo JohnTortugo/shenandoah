@@ -39,7 +39,6 @@ void ShenandoahCardTable::initialize() {
   _byte_map_size = align_up(num_bytes, MAX2(_page_size, granularity));
 
   HeapWord* low_bound  = _whole_heap.start();
-  HeapWord* high_bound = _whole_heap.end();
 
   // ReservedSpace constructor would assert rs_align >= os::vm_page_size().
   const size_t rs_align = _page_size == os::vm_page_size() ? 0 : MAX2(_page_size, granularity);
@@ -66,11 +65,9 @@ void ShenandoahCardTable::initialize() {
   _covered[0] = _whole_heap;
 
   log_trace(gc, barrier)("ShenandoahCardTable::ShenandoahCardTable:");
-  log_trace(gc, barrier)("    &_write_byte_map[0]: " INTPTR_FORMAT "  &_write_byte_map[_last_valid_index]: " INTPTR_FORMAT,
-                         p2i(&_write_byte_map[0]), p2i(&_write_byte_map[last_valid_index()]));
+  log_trace(gc, barrier)("    &_write_byte_map[0]: " INTPTR_FORMAT "  &_write_byte_map[_last_valid_index]: " INTPTR_FORMAT, p2i(&_write_byte_map[0]), p2i(&_write_byte_map[last_valid_index()]));
   log_trace(gc, barrier)("    _write_byte_map_base: " INTPTR_FORMAT, p2i(_write_byte_map_base));
-  log_trace(gc, barrier)("    &_read_byte_map[0]: " INTPTR_FORMAT "  &_read_byte_map[_last_valid_index]: " INTPTR_FORMAT,
-                  p2i(&_read_byte_map[0]), p2i(&_read_byte_map[last_valid_index()]));
+  log_trace(gc, barrier)("    &_read_byte_map[0]: " INTPTR_FORMAT "  &_read_byte_map[_last_valid_index]: " INTPTR_FORMAT, p2i(&_read_byte_map[0]), p2i(&_read_byte_map[last_valid_index()]));
   log_trace(gc, barrier)("    _read_byte_map_base: " INTPTR_FORMAT, p2i(_read_byte_map_base));
 }
 

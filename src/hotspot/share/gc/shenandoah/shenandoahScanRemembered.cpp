@@ -117,7 +117,9 @@ void ShenandoahDirectCardMarkRememberedSet::mark_read_table_as_clean() {
   CardValue* read_table = _card_table->read_byte_map_base();
 
   CardValue* bp = &(read_table)[0];
-  CardValue* end_bp = &(read_table)[_card_table->last_valid_index() >> _card_shift];
+  CardValue* end_bp = &(read_table)[_card_table->last_valid_index()];
+
+  tty->print_cr("Going to clean from %lx to %lx", p2i(bp), p2i(end_bp));
 
   while (bp < end_bp) {
     *bp++ = CardTable::clean_card_val();
@@ -627,7 +629,7 @@ void ShenandoahDirectCardMarkRememberedSet::swap_remset() {
 
 #ifdef ASSERT
   CardValue* bp = &(new_ptr)[0];
-  CardValue* end_bp = &(new_ptr)[_card_table->last_valid_index() >> _card_shift];
+  CardValue* end_bp = &(new_ptr)[_card_table->last_valid_index()];
 
   while (bp < end_bp) {
     assert(*bp == CardTable::clean_card_val(), "Should be clean.");
