@@ -114,12 +114,9 @@ void ShenandoahDirectCardMarkRememberedSet::mark_range_as_clean(HeapWord* p, siz
 }
 
 void ShenandoahDirectCardMarkRememberedSet::mark_read_table_as_clean() {
-  CardValue* read_table = _card_table->read_byte_map_base();
-
+  CardValue* read_table = _card_table->read_byte_map();
   CardValue* bp = &(read_table)[0];
   CardValue* end_bp = &(read_table)[_card_table->last_valid_index()];
-
-  tty->print_cr("Going to clean from %lx to %lx", p2i(bp), p2i(end_bp));
 
   while (bp < end_bp) {
     *bp++ = CardTable::clean_card_val();
