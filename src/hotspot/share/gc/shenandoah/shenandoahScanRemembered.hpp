@@ -236,15 +236,14 @@ public:
   inline bool is_write_card_dirty(HeapWord* p) const;
   inline void mark_card_as_dirty(HeapWord* p);
   inline void mark_range_as_dirty(HeapWord* p, size_t num_heap_words);
-  inline void mark_card_as_clean(HeapWord* p);
   inline void mark_range_as_clean(HeapWord* p, size_t num_heap_words);
+  inline void mark_read_table_as_clean();
 
   // Merge any dirty values from write table into the read table, while leaving
   // the write table unchanged.
   void merge_write_table(HeapWord* start, size_t word_count);
 
-  // Destructively copy the write table to the read table, and clean the write table.
-  void reset_remset(HeapWord* start, size_t word_count);
+  void swap_remset();
 };
 
 // A ShenandoahCardCluster represents the minimal unit of work
@@ -755,10 +754,10 @@ public:
   bool is_write_card_dirty(HeapWord* p);
   void mark_card_as_dirty(HeapWord* p);
   void mark_range_as_dirty(HeapWord* p, size_t num_heap_words);
-  void mark_card_as_clean(HeapWord* p);
   void mark_range_as_clean(HeapWord* p, size_t num_heap_words);
+  void mark_read_table_as_clean();
 
-  void reset_remset(HeapWord* start, size_t word_count) { _rs->reset_remset(start, word_count); }
+  void swap_remset() { _rs->swap_remset(); }
 
   void merge_write_table(HeapWord* start, size_t word_count) { _rs->merge_write_table(start, word_count); }
 
