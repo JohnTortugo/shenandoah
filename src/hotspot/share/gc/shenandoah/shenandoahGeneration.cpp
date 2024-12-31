@@ -228,7 +228,7 @@ void ShenandoahGeneration::swap_remembered_set() {
   shenandoah_assert_safepoint();
 
   ShenandoahOldGeneration* old_generation = heap->old_generation();
-  old_generation->card_scan()->swap_remset();
+  old_generation->card_scan()->swap_card_tables();
 }
 
 // Copy the write-version of the card-table into the read-version, clearing the

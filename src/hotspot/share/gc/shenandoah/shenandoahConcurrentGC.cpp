@@ -1115,9 +1115,9 @@ void ShenandoahConcurrentGC::op_final_updaterefs() {
   }
 
   // Has to be done before cset is clear
-  // if (ShenandoahVerify) {
-  //   heap->verifier()->verify_roots_in_to_space();
-  // }
+  if (ShenandoahVerify) {
+    heap->verifier()->verify_roots_in_to_space();
+  }
 
   // If we are running in generational mode and this is an aging cycle, this will also age active
   // regions that haven't been used for allocation.

@@ -634,9 +634,9 @@ void ShenandoahDirectCardMarkRememberedSet::swap_card_tables() {
   }
 #endif
 
-  struct SwapCardTable : public ThreadClosure {
+  struct SwapTLSCardTable : public ThreadClosure {
     CardTable::CardValue* new_ptr;
-    SwapCardTable(CardTable::CardValue* np) {
+    SwapTLSCardTable(CardTable::CardValue* np) {
       this->new_ptr = np;
     }
     virtual void do_thread(Thread* t) {

@@ -620,26 +620,26 @@ void ShenandoahBarrierSetAssembler::store_check(MacroAssembler* masm, Register o
   // We'll use this register as the TLS base address and also later on
   // to hold the byte_map_base.
   Register thread = LP64_ONLY(r15_thread) NOT_LP64(rcx);
-  Register tmp1 = LP64_ONLY(rscratch1) NOT_LP64(rdx);
+  Register tmp = LP64_ONLY(rscratch1) NOT_LP64(rdx);
 
 #ifndef _LP64
+  // The next two ifs are just to get temporary registers to use for TLS and card table base.
   if (thread == obj) {
     thread = rdx;
-    tmp1 = rsi;
+    tmp = rsi;
   }
-
-  if (tmp1 == obj) {
-    tmp1 = rsi;
+  if (tmp == obj) {
+    tmp = rsi;
   }
 
   __ push(thread);
-  __ push(tmp1);
+  __ push(tmp);
   __ get_thread(thread);
 #endif
 
   Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
-  __ movptr(tmp1, curr_ct_holder_addr);  // byte_map_base := *curr_ct_holder_addr
-  Address card_addr(tmp1, obj, Address::times_1);
+  __ movptr(tmp, curr_ct_holder_addr);
+  Address card_addr(tmp, obj, Address::times_1);
 
   int dirty = CardTable::dirty_card_val();
   if (UseCondCardMark) {
@@ -922,7 +922,7 @@ void ShenandoahBarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssemb
 #ifdef _LP64
   const Register thread = r15_thread;
   Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
-  __ movptr(tmp, curr_ct_holder_addr);  // tmp := *curr_ct_holder_addr
+  __ movptr(tmp, curr_ct_holder_addr);
 
   __ leaq(end, Address(addr, count, TIMES_OOP, 0));  // end == addr+count*oop_size
   __ subptr(end, BytesPerHeapOop); // end - 1 to make inclusive
@@ -941,7 +941,7 @@ void ShenandoahBarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssemb
   __ get_thread(tmp);
 
   Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
-  __ movptr(tmp, curr_ct_holder_addr);  // tmp := *curr_ct_holder_addr
+  __ movptr(tmp, curr_ct_holder_addr);
 
   __ lea(end, Address(addr, count, Address::times_ptr, -wordSize));
   __ shrptr(addr, CardTable::card_shift());
