@@ -49,6 +49,7 @@ private:
 
   SATBMarkQueue           _satb_mark_queue;
 
+  // Current "write" CardTable's byte_map_base for this thread.
   CardTable::CardValue*   _byte_map_base;
 
   // Thread-local allocation buffer for object evacuations.
@@ -108,12 +109,6 @@ public:
     return data(thread)->_satb_mark_queue;
   }
 
-  static CardTable::CardValue* byte_map_base(Thread* thread) {
-    CardTable::CardValue* cv = data(thread)->_byte_map_base;
-    assert(cv != nullptr, "returning thread local byte_map_base which is nullptr.");
-    return cv;
-  }
-
   static void set_gc_state(Thread* thread, char gc_state) {
     data(thread)->_gc_state = gc_state;
   }
@@ -123,9 +118,15 @@ public:
     return data(thread)->_gc_state;
   }
 
-  static void set_map_base(Thread* thread, CardTable::CardValue* cv) {
-    assert(cv != nullptr, "trying to set thread local byte_map_base to nullptr.");
-    data(thread)->_byte_map_base = cv;
+  static void set_byte_map_base(Thread* thread, CardTable::CardValue* bmp) {
+    assert(bmp != nullptr, "trying to set thread local byte_map_base to nullptr.");
+    data(thread)->_byte_map_base = bmp;
+  }
+
+  static CardTable::CardValue* byte_map_base(Thread* thread) {
+    CardTable::CardValue* bmp = data(thread)->_byte_map_base;
+    assert(bmp != nullptr, "returning a null thread local byte_map_base.");
+    return bmp;
   }
 
   static void initialize_gclab(Thread* thread) {

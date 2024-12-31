@@ -108,7 +108,7 @@ void ShenandoahBarrierSet::on_thread_attach(Thread *thread) {
   queue.set_active(_satb_mark_queue_set.is_active());
 
   if (ShenandoahCardBarrier) {
-    ShenandoahThreadLocalData::set_map_base(thread, _card_table->write_byte_map_base());
+    ShenandoahThreadLocalData::set_byte_map_base(thread, _card_table->write_byte_map_base());
   }
 
   if (thread->is_Java_thread()) {

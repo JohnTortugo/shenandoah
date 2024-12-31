@@ -122,7 +122,7 @@ void ShenandoahDirectCardMarkRememberedSet::mark_read_table_as_clean() {
     *bp++ = CardTable::clean_card_val();
   }
 
-  log_info(gc, remset)("Cleaned read_table from " PTR_FORMAT " to " PTR_FORMAT, p2i(&(read_table)[0]), p2i(end_bp));
+  log_info(gc, barrier)("Cleaned read_table from " PTR_FORMAT " to " PTR_FORMAT, p2i(&(read_table)[0]), p2i(end_bp));
 }
 
 // No lock required because arguments align with card boundaries.
@@ -621,32 +621,33 @@ void ShenandoahDirectCardMarkRememberedSet::merge_write_table(HeapWord* start, s
   log_info(gc, remset)("Finished merging write_table into read_table.");
 }
 
-void ShenandoahDirectCardMarkRememberedSet::swap_remset() {
-  CardTable::CardValue* new_ptr = _card_table->swap_bases();
+void ShenandoahDirectCardMarkRememberedSet::swap_card_tables() {
+  CardTable::CardValue* new_ptr = _card_table->swap_read_and_write_tables();
 
 #ifdef ASSERT
-  CardValue* bp = &(new_ptr)[0];
+  CardValue* start_bp = &(_card_table->write_byte_map())[0];
   CardValue* end_bp = &(new_ptr)[_card_table->last_valid_index()];
 
-  while (bp < end_bp) {
-    assert(*bp == CardTable::clean_card_val(), "Should be clean.");
-    bp++;
+  while (start_bp < end_bp) {
+    assert(*start_bp == CardTable::clean_card_val(), "Should be clean: " PTR_FORMAT, p2i(start_bp));
+    start_bp++;
   }
 #endif
 
-  // Iterate on threads and adjust thread local data
-  struct SwapRemSet : public ThreadClosure {
+  struct SwapCardTable : public ThreadClosure {
     CardTable::CardValue* new_ptr;
-    SwapRemSet(CardTable::CardValue* np) {
+    SwapCardTable(CardTable::CardValue* np) {
       this->new_ptr = np;
     }
     virtual void do_thread(Thread* t) {
-      ShenandoahThreadLocalData::set_map_base(t, new_ptr);
+      ShenandoahThreadLocalData::set_byte_map_base(t, new_ptr);
     }
-  } reset_remset(new_ptr);
+  } swap_it(new_ptr);
 
-  log_info(gc, remset)("Swapping RemSet to: " PTR_FORMAT, p2i(reset_remset.new_ptr));
-  Threads::threads_do(&reset_remset);
+  // Iterate on threads and adjust thread local data
+  Threads::threads_do(&swap_it);
+
+  log_info(gc, barrier)("Current write_card_table: " PTR_FORMAT, p2i(swap_it.new_ptr));
 }
 
 ShenandoahScanRememberedTask::ShenandoahScanRememberedTask(ShenandoahObjToScanQueueSet* queue_set,
