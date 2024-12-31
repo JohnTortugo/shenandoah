@@ -311,7 +311,7 @@ void ShenandoahBarrierSetC1::post_barrier(LIRAccess& access, LIR_Opr addr, LIR_O
   }
 
   LIR_Opr thrd = gen->getThreadPointer();
-  const int curr_ct_holder_offset = in_bytes(ShenandoahThreadLocalData::byte_map_base_offset());
+  const int curr_ct_holder_offset = in_bytes(ShenandoahThreadLocalData::card_table_offset());
   LIR_Address* curr_ct_holder_addr = new LIR_Address(thrd, curr_ct_holder_offset, T_ADDRESS);
   LIR_Opr curr_ct_holder_ptr_reg = gen->new_register(T_ADDRESS);
   __ move(curr_ct_holder_addr, curr_ct_holder_ptr_reg);

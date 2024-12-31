@@ -640,7 +640,7 @@ void ShenandoahDirectCardMarkRememberedSet::swap_card_tables() {
       this->new_ptr = np;
     }
     virtual void do_thread(Thread* t) {
-      ShenandoahThreadLocalData::set_byte_map_base(t, new_ptr);
+      ShenandoahThreadLocalData::set_card_table(t, new_ptr);
     }
   } swap_it(new_ptr);
 

@@ -637,7 +637,7 @@ void ShenandoahBarrierSetAssembler::store_check(MacroAssembler* masm, Register o
   __ get_thread(thread);
 #endif
 
-  Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
+  Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::card_table_offset()));
   __ movptr(tmp, curr_ct_holder_addr);
   Address card_addr(tmp, obj, Address::times_1);
 
@@ -921,7 +921,7 @@ void ShenandoahBarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssemb
 
 #ifdef _LP64
   const Register thread = r15_thread;
-  Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
+  Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::card_table_offset()));
   __ movptr(tmp, curr_ct_holder_addr);
 
   __ leaq(end, Address(addr, count, TIMES_OOP, 0));  // end == addr+count*oop_size

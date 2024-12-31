@@ -106,5 +106,5 @@ size_t ShenandoahCardTable::last_valid_index() {
 }
 
 CardValue* ShenandoahCardTable::byte_map_base() const {
-  return ShenandoahThreadLocalData::byte_map_base(Thread::current());
+  return ShenandoahThreadLocalData::card_table(Thread::current());
 }

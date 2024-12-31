@@ -108,7 +108,9 @@ void ShenandoahBarrierSet::on_thread_attach(Thread *thread) {
   queue.set_active(_satb_mark_queue_set.is_active());
 
   if (ShenandoahCardBarrier) {
-    ShenandoahThreadLocalData::set_byte_map_base(thread, _card_table->write_byte_map_base());
+    // Every thread always have a pointer to the _current_ _write_ version of the card table.
+    // The JIT'ed code will use this address (+card entry offset) to marke card's as dirty.
+    ShenandoahThreadLocalData::set_card_table(thread, _card_table->write_byte_map_base());
   }
 
   if (thread->is_Java_thread()) {
