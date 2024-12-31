@@ -476,7 +476,7 @@ void ShenandoahBarrierSetC2::post_barrier(GraphKit* kit,
   // Convert the pointer to an int prior to doing math on it
   Node* cast = __ CastPX(__ ctrl(), adr);
 
-  Node* curr_ct_holder_offset = __ ConX(in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
+  Node* curr_ct_holder_offset = __ ConX(in_bytes(ShenandoahThreadLocalData::card_table_offset()));
   Node* curr_ct_holder_addr  = __ AddP(__ top(), tls, curr_ct_holder_offset);
   Node* curr_ct_base_addr = __ load( __ ctrl(), curr_ct_holder_addr, TypeRawPtr::NOTNULL, T_ADDRESS, Compile::AliasIdxRaw);
 

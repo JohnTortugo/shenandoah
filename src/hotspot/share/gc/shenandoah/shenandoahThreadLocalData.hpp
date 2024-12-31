@@ -49,7 +49,8 @@ private:
 
   SATBMarkQueue           _satb_mark_queue;
 
-  CardTable::CardValue*   _byte_map_base;
+  // Current active CardTable's byte_map_base for this thread.
+  CardTable::CardValue*   _card_table;
 
   // Thread-local allocation buffer for object evacuations.
   // In generational mode, it is exclusive to the young generation.
@@ -108,12 +109,6 @@ public:
     return data(thread)->_satb_mark_queue;
   }
 
-  static CardTable::CardValue* byte_map_base(Thread* thread) {
-    CardTable::CardValue* cv = data(thread)->_byte_map_base;
-    assert(cv != nullptr, "returning thread local byte_map_base which is nullptr.");
-    return cv;
-  }
-
   static void set_gc_state(Thread* thread, char gc_state) {
     data(thread)->_gc_state = gc_state;
   }
@@ -123,9 +118,15 @@ public:
     return data(thread)->_gc_state;
   }
 
-  static void set_map_base(Thread* thread, CardTable::CardValue* cv) {
-    assert(cv != nullptr, "trying to set thread local byte_map_base to nullptr.");
-    data(thread)->_byte_map_base = cv;
+  static void set_card_table(Thread* thread, CardTable::CardValue* ct) {
+    assert(ct != nullptr, "trying to set thread local card_table pointer to nullptr.");
+    data(thread)->_card_table = ct;
+  }
+
+  static CardTable::CardValue* card_table(Thread* thread) {
+    CardTable::CardValue* ct = data(thread)->_card_table;
+    assert(ct != nullptr, "returning a null thread local card_table pointer.");
+    return ct;
   }
 
   static void initialize_gclab(Thread* thread) {
@@ -288,8 +289,8 @@ public:
     return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _gc_state);
   }
 
-  static ByteSize byte_map_base_offset() {
-    return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _byte_map_base);
+  static ByteSize card_table_offset() {
+    return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _card_table);
   }
 };
 

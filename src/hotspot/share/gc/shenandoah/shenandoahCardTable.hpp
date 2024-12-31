@@ -68,19 +68,17 @@ public:
 
   size_t last_valid_index();
 
-  CardValue* byte_map_base() const;
+  CardValue* byte_map_base() const override;
 
-  CardValue* swap_bases() {
+  CardValue* swap_read_and_write_tables() {
     swap(_read_byte_map, _write_byte_map);
     swap(_read_byte_map_base, _write_byte_map_base);
 
     _byte_map = _write_byte_map;
     _byte_map_base = _write_byte_map_base;
 
-    log_trace(gc, barrier)("ShenandoahCardTable::swap_bases:");
-    log_trace(gc, barrier)("    &_byte_map[0]: " INTPTR_FORMAT "  &_byte_map[_last_valid_index]: " INTPTR_FORMAT, p2i(&_byte_map[0]), p2i(&_byte_map[last_valid_index()]));
-    log_trace(gc, barrier)("    _byte_map: " INTPTR_FORMAT, p2i(_byte_map));
-
+    log_trace(gc, barrier)("ShenandoahCardTable::swap_read_and_write_tables:");
+    log_trace(gc, barrier)("    _byte_map_base: " INTPTR_FORMAT " _byte_map: " INTPTR_FORMAT, p2i(_byte_map_base), p2i(_byte_map));
     return _byte_map_base;
   }
 

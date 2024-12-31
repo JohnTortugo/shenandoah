@@ -630,7 +630,7 @@ void ShenandoahConcurrentGC::op_init_mark() {
   if (heap->mode()->is_generational()) {
     if (_generation->is_young()) {
       ShenandoahGCPhase phase(ShenandoahPhaseTimings::init_swap_rset);
-      _generation->swap_remembered_set();
+      _generation->swap_card_tables();
     }
 
     if (_generation->is_global()) {
