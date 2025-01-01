@@ -49,6 +49,9 @@ private:
 
   SATBMarkQueue           _satb_mark_queue;
 
+  // Current active CardTable's byte_map_base for this thread.
+  CardTable::CardValue*   _card_table;
+
   // Thread-local allocation buffer for object evacuations.
   // In generational mode, it is exclusive to the young generation.
   PLAB* _gclab;
@@ -113,6 +116,17 @@ public:
   static char gc_state(Thread* thread) {
     assert(thread->is_Java_thread(), "GC state is only synchronized to java threads");
     return data(thread)->_gc_state;
+  }
+
+  static void set_card_table(Thread* thread, CardTable::CardValue* ct) {
+    assert(ct != nullptr, "trying to set thread local card_table pointer to nullptr.");
+    data(thread)->_card_table = ct;
+  }
+
+  static CardTable::CardValue* card_table(Thread* thread) {
+    CardTable::CardValue* ct = data(thread)->_card_table;
+    assert(ct != nullptr, "returning a null thread local card_table pointer.");
+    return ct;
   }
 
   static void initialize_gclab(Thread* thread) {
@@ -273,6 +287,10 @@ public:
 
   static ByteSize gc_state_offset() {
     return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _gc_state);
+  }
+
+  static ByteSize card_table_offset() {
+    return Thread::gc_data_offset() + byte_offset_of(ShenandoahThreadLocalData, _card_table);
   }
 };
 
