@@ -134,7 +134,7 @@ void ShenandoahDegenGC::op_degenerated() {
 
       if (heap->mode()->is_generational() && _generation->is_young()) {
         // Swap remembered sets for young
-        _generation->swap_remembered_set();
+        _generation->swap_card_tables();
       }
 
     case _degenerated_roots:

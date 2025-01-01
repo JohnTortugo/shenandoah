@@ -217,11 +217,11 @@ void ShenandoahGeneration::reset_mark_bitmap() {
   heap->workers()->run_task(&task);
 }
 
-// Swap the card table remset copies prior to the next remset scan.
+// Swap the read and write card table pointers prior to the next remset scan.
 // This avoids the need to synchronize reads of the table by the GC workers doing
 // remset scanning, on the one hand, with the dirtying of the table by mutators
 // and by the GC workers doing remset scans, on the other.
-void ShenandoahGeneration::swap_remembered_set() {
+void ShenandoahGeneration::swap_card_tables() {
   // Must be sure that marking is complete before we swap remembered set.
   ShenandoahGenerationalHeap* heap = ShenandoahGenerationalHeap::heap();
   heap->assert_gc_workers(heap->workers()->active_workers());

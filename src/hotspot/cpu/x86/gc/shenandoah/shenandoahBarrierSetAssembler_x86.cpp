@@ -938,7 +938,7 @@ void ShenandoahBarrierSetAssembler::gen_write_ref_array_post_barrier(MacroAssemb
   __ jccb(Assembler::greaterEqual, L_loop);
 #else
   const Register thread = tmp;
-  __ get_thread(tmp);
+  __ get_thread(thread);
 
   Address curr_ct_holder_addr(thread, in_bytes(ShenandoahThreadLocalData::byte_map_base_offset()));
   __ movptr(tmp, curr_ct_holder_addr);

@@ -231,7 +231,7 @@ jint ShenandoahHeap::initialize() {
   BarrierSet::set_barrier_set(bs);
 
   // Every thread always have a pointer to the _current_ _write_ version of the card table.
-  // The JIT'ed code will use this address (+card entry offset) to marke card's as dirty.
+  // The JIT'ed code will use this address (+card entry offset) to mark card's as dirty.
   //
   // Now that ThreadLocalData's are created we can set byte_map_base on it.
   if (ShenandoahCardBarrier) {

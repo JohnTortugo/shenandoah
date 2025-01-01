@@ -120,8 +120,8 @@ public:
            p2i(p), p2i(_whole_heap.start()), p2i(_whole_heap.end()));
     CardValue* local_byte_map_base = byte_map_base();
     CardValue* result = &local_byte_map_base[uintptr_t(p) >> _card_shift];
-    assert(result >= byte_map() && result < byte_map() + _byte_map_size,
-           "out of bounds accessor for card marking array");
+    assert(result >= byte_map() && result < (byte_map() + _byte_map_size),
+           "out of bounds accessor for card marking array. result: " PTR_FORMAT ", byte_map: " PTR_FORMAT ", byte_map_size: %lu", p2i(result), p2i(byte_map()), _byte_map_size);
     return result;
   }
 
