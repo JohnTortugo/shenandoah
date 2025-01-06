@@ -77,8 +77,6 @@ public:
     _byte_map = _write_byte_map;
     _byte_map_base = _write_byte_map_base;
 
-    log_trace(gc, barrier)("ShenandoahCardTable::swap_read_and_write_tables:");
-    log_trace(gc, barrier)("    _byte_map_base: " INTPTR_FORMAT " _byte_map: " INTPTR_FORMAT, p2i(_byte_map_base), p2i(_byte_map));
     return _byte_map_base;
   }
 
